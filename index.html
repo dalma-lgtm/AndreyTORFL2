@@ -4,77 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TORFL 2 AI Tutor</title>
-    <!-- 폰트 -->
+    <!-- 2026년형 폰트 (러시아어 지원) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- 스타일 연결 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/orb.css">
+    
     <!-- 아이콘 -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-    <div class="background-glow"></div>
+    <!-- 배경 효과 -->
+    <div class="bg-gradient"></div>
 
-    <main class="container">
-        <!-- 상단 -->
-        <header>
-            <div class="status-pill">
-                <span class="dot" id="status-dot"></span> 
-                <span id="connection-status">Disconnected</span>
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="app-container">
+        
+        <!-- [TAB 1] 라이브 대화 (Chat) -->
+        <section id="tab-chat" class="tab-content active">
+            <div class="chat-header">
+                <span class="status-badge online">● Live</span>
+                <h2 id="current-model-display">GPT-4o</h2>
             </div>
-            <button id="settings-btn" class="icon-btn"><i data-lucide="settings"></i></button>
-        </header>
-
-        <!-- 중앙 Orb -->
-        <div class="orb-container">
-            <canvas id="orb-canvas"></canvas>
-        </div>
-
-        <!-- 채팅 -->
-        <div id="chat-scroller" class="chat-scroller">
-            <div class="message ai-message">
-                Привет! 준비되셨나요? API 키를 설정해주세요.
+            
+            <!-- AI Orb (화면 중앙) -->
+            <div class="orb-wrapper">
+                <div class="orb" id="ai-orb"></div>
+                <div class="orb-status" id="orb-status-text">Listening...</div>
             </div>
-        </div>
 
-        <!-- 하단 입력 -->
-        <div class="input-area">
-            <button id="vocab-btn" class="icon-btn sub-btn"><i data-lucide="book"></i></button>
-            <div class="text-input-wrapper">
-                <input type="text" id="text-input" placeholder="러시아어로 입력..." autocomplete="off">
+            <!-- 대화 로그 (스크롤) -->
+            <div class="chat-log" id="chat-log">
+                <div class="msg ai">
+                    Привет! 토르플 2급 준비를 시작해볼까요?
+                </div>
             </div>
-            <button id="mic-btn" class="mic-btn">
-                <i data-lucide="mic"></i>
-            </button>
-        </div>
+
+            <!-- 하단 컨트롤 -->
+            <div class="controls">
+                <button id="btn-mic" class="control-btn mic-btn">
+                    <i data-lucide="mic"></i>
+                </button>
+                <div class="text-input-box">
+                    <input type="text" id="chat-input" placeholder="메시지 입력...">
+                    <button id="btn-send"><i data-lucide="send"></i></button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- [TAB 2] 단어 공부 (Study) -->
+        <section id="tab-study" class="tab-content">
+            <header class="study-header">
+                <h2>Vocabulary</h2>
+                <button id="btn-refresh-vocab"><i data-lucide="refresh-cw"></i></button>
+            </header>
+            
+            <!-- 퀴즈 카드 영역 -->
+            <div class="card-stack" id="card-stack">
+                <!-- 자바스크립트로 카드가 여기에 생성됨 -->
+                <div class="flashcard">
+                    <div class="card-front">
+                        <h3>불러오는 중...</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="study-controls">
+                <button class="action-btn secondary" id="btn-prev">이전</button>
+                <button class="action-btn primary" id="btn-flip">정답 확인</button>
+                <button class="action-btn secondary" id="btn-next">다음</button>
+            </div>
+        </section>
+
+
+        <!-- [TAB 3] 설정 (Settings) -->
+        <section id="tab-settings" class="tab-content">
+            <h2>Settings</h2>
+            
+            <div class="settings-group">
+                <label>AI Model</label>
+                <select id="setting-model">
+                    <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <label>OpenAI API Key</label>
+                <input type="password" id="setting-apikey-openai" placeholder="sk-...">
+            </div>
+
+            <div class="settings-group">
+                <label>System Prompt (Persona)</label>
+                <textarea id="setting-prompt" rows="6">당신은 러시아어 토르플 2급(TORFL-2) 전문 시험관입니다.
+1. 사용자의 문법 오류(격변화, 형동사 등)를 엄격하게 지적하세요.
+2. 설명은 한국어로 하되, 예문은 러시아어로 드세요.
+3. 대화는 자연스럽게 이어가세요.</textarea>
+            </div>
+
+            <button id="btn-save-settings" class="full-width-btn">저장하기 (Save)</button>
+        </section>
+
     </main>
 
-    <!-- 설정 모달 -->
-    <div id="settings-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>설정 (Settings)</h3>
-            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">OpenAI API Key를 입력해야 작동합니다.</p>
-            <label>API Key</label>
-            <input type="password" id="api-key-input" placeholder="sk-...">
-            
-            <label>System Prompt</label>
-            <textarea id="system-prompt" rows="4">당신은 엄격한 러시아어 토르플 2급 시험관입니다. 문법 오류를 지적하고 고급 어휘를 가르쳐주세요.</textarea>
-            
-            <button id="save-settings">저장 및 연결</button>
-            <button id="close-settings" style="background: transparent; border: 1px solid #555; margin-top: 10px;">닫기</button>
-        </div>
-    </div>
+    <!-- 하단 네비게이션 바 -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-target="tab-chat">
+            <i data-lucide="message-circle"></i>
+            <span>Chat</span>
+        </button>
+        <button class="nav-item" data-target="tab-study">
+            <i data-lucide="book-open"></i>
+            <span>Study</span>
+        </button>
+        <button class="nav-item" data-target="tab-settings">
+            <i data-lucide="settings"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
 
-    <!-- 스크립트: 순서 중요 -->
-    <script src="js/ui.js"></script>
-    <script src="js/app.js"></script>
+    <!-- JS 로드 (순서 중요) -->
+    <script src="js/api.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/study.js"></script>
+    <script src="js/main.js"></script>
     <script>
-        // 아이콘 렌더링 강제 실행
-        window.addEventListener('DOMContentLoaded', () => {
-            if (window.lucide) {
-                lucide.createIcons();
-            }
-        });
+        lucide.createIcons();
     </script>
 </body>
 </html>
