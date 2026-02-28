@@ -6,8 +6,8 @@
 const API = {
 
     // ===== OpenAI Chat Completion =====
-    async chatOpenAI(messages, model = 'gpt-4o-mini') {
-        const key = Storage.getApiKey('openai');
+    async chatOpenAI(messages, model = 'gpt-5-mini') {
+
         if (!key) throw new Error('OpenAI API 키가 설정되지 않았습니다.');
 
         const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -34,7 +34,8 @@ const API = {
     },
 
     // ===== Google Gemini =====
-    async chatGemini(messages, model = 'gemini-2.0-flash') {
+    async chatGemini(messages, model = 'gemini-3-flash') {
+
         const key = Storage.getApiKey('google');
         if (!key) throw new Error('Google AI API 키가 설정되지 않았습니다.');
 
@@ -86,17 +87,21 @@ const API = {
 
     // ===== 통합 Chat — 선택된 LLM으로 자동 라우팅 =====
     async chat(messages, modelOverride = null) {
-        const model = modelOverride || Storage.getSelectedLLM();
-        const provider = Storage.getProviderForLLM(model);
+        const model = modelOverride || Storage.getSelectedLLM() || 'gpt-5-mini';
+        
+        // 모델 이름 앞글자만 보고 OpenAI인지 Google인지 자동 판별!
+        const isGemini = model.startsWith("gemini");
+        const isOpenAI = model.startsWith("gpt") || model.startsWith("o");
 
-        if (provider === 'openai') {
+        if (isOpenAI) {
             return this.chatOpenAI(messages, model);
-        } else if (provider === 'google') {
+        } else if (isGemini) {
             return this.chatGemini(messages, model);
         }
 
         throw new Error(`지원되지 않는 모델: ${model}`);
     },
+
 
     // ===== STT: 음성 → 텍스트 (gpt-4o-mini-transcribe) =====
     async transcribe(audioBlob) {

@@ -243,11 +243,16 @@
                     
                     <div class="setting-item">
                         <label>회화 튜터 LLM</label>
-                        <select id="setting-llm" class="setting-input">
-                            <option value="gpt-4o">GPT-4o (가장 똑똑, 비쌈)</option>
-                            <option value="gpt-4o-mini" selected>GPT-4o-mini (빠르고 저렴) ⭐</option>
-                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (빠르고 저렴)</option>
-                            <option value="gemini-2.5-flash-preview">Gemini 2.5 Flash Preview (최신)</option>
+                        <select id="llm-model" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+                            <optgroup label="OpenAI (GPT-5 & o4 series)">
+                                <option value="gpt-5-mini" selected>GPT-5 Mini (⚡ 초고속, 회화 티키타카용)</option>
+                                <option value="gpt-5.2">GPT-5.2 (🧠 최신 플래그십, 원어민급 완벽 교정)</option>
+                                <option value="o4-mini">o4-mini (🔍 최신 추론 모델, 문법 딥 리서치/해설용)</option>
+                            </optgroup>
+                            <optgroup label="Google (Gemini 3 Series)">
+                                <option value="gemini-3-flash">Gemini 3 Flash (⚡ 제미나이 최신 가성비/속도 끝판왕)</option>
+                                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (🔥 26년 2월 출시, 복잡한 문맥 분석용)</option>
+                            </optgroup>
                         </select>
                     </div>
 
