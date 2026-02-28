@@ -3,65 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TORFL Tutor - Andrey's Knowledge Base</title>
+    <title>TORFL-2 Pro Controller</title>
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/chat.css">
+    <!-- 아이콘 사용을 위한 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>🎓 TORFL-2 Master</h1>
-            <div id="status-bar">Ready</div>
-        </header>
-        
-        <main>
-            <!-- 탭 메뉴 -->
-            <nav class="tabs">
-                <button class="tab-btn active" data-tab="chat">🗣️ Speaking</button>
-                <button class="tab-btn" data-tab="vocab">📚 Vocabulary (KB)</button>
+    <div class="app-container">
+        <!-- 사이드바 (메뉴) -->
+        <aside class="sidebar">
+            <div class="brand">🚀 TORFL.Pro</div>
+            <nav>
+                <button class="nav-btn active" data-target="dashboard">
+                    <i class="ri-dashboard-line"></i> Dashboard
+                </button>
+                <button class="nav-btn" data-target="chat">
+                    <i class="ri-chat-voice-line"></i> Live Session
+                </button>
+                <button class="nav-btn" data-target="prompt">
+                    <i class="ri-brain-line"></i> System Prompt
+                </button>
+                <button class="nav-btn" data-target="settings">
+                    <i class="ri-settings-4-line"></i> Settings
+                </button>
             </nav>
+            <div class="status-indicator">
+                <span class="dot"></span> <span id="api-status">API Ready</span>
+            </div>
+        </aside>
 
-            <!-- 채팅 화면 -->
-            <!-- index.html의 <section id="chat-tab"> 부분 교체 -->
-
-<section id="chat-tab" class="tab-content active">
-    <div id="chat-box" class="chat-container">
-        <!-- 초기 환영 메시지 -->
-        <div class="message ai">
-            👋 Здравствуйте!<br>
-            <b>TORFL-2 Speaking Coach</b>입니다.<br>
-            오늘의 주제를 말씀해 주세요.
-        </div>
-    </div>
-    
-    <!-- 하단 입력 컨트롤 -->
-    <div style="margin-top: auto;">
-        <!-- 텍스트 입력 -->
-        <div class="input-area">
-            <input type="text" id="text-input" placeholder="메시지를 입력하세요 (Russian)...">
-            <button id="send-btn" class="send-btn">➤</button>
-        </div>
-
-        <!-- 음성 버튼 -->
-        <button id="rec-btn" class="action-btn" style="margin-top: 10px;">
-            🎙️ 말하기 (Hold)
-        </button>
-    </div>
-</section>
-
-
-            <!-- 단어장 화면 -->
-            <section id="vocab-tab" class="tab-content">
-                <div class="card">
-                    <h3>Knowledge Base Sync</h3>
-                    <button id="sync-btn" class="action-btn secondary">🔄 GitHub 데이터 불러오기</button>
-                    <div id="vocab-display">데이터를 불러와주세요.</div>
+        <!-- 메인 컨텐츠 영역 -->
+        <main class="content">
+            
+            <!-- 1. 대시보드 -->
+            <section id="dashboard" class="panel active">
+                <h2>Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Current Model</h3>
+                        <p id="current-model-display">GPT-4o</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Session Time</h3>
+                        <p>00:00:00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Knowledge Base</h3>
+                        <p id="kb-status">Linked (GitHub)</p>
+                    </div>
                 </div>
             </section>
+
+            <!-- 2. 채팅/회화 -->
+            <section id="chat" class="panel">
+                <div class="chat-header">
+                    <h2>Live Session</h2>
+                    <div class="mode-toggles">
+                        <label><input type="checkbox" id="auto-tts" checked> Auto TTS</label>
+                        <label><input type="checkbox" id="strict-mode"> Strict Mode</label>
+                    </div>
+                </div>
+                <div id="chat-box" class="terminal-chat">
+                    <div class="msg system">[SYSTEM] Session initialized. Waiting for input...</div>
+                </div>
+                <div class="input-console">
+                    <button id="rec-btn" class="console-btn rec"><i class="ri-mic-line"></i> REC</button>
+                    <input type="text" id="text-input" placeholder="Type command or Russian text...">
+                    <button id="send-btn" class="console-btn"><i class="ri-send-plane-fill"></i></button>
+                </div>
+            </section>
+
+            <!-- 3. 프롬프트 에디터 (핵심) -->
+            <section id="prompt" class="panel">
+                <h2>🧠 System Brain Configuration</h2>
+                <p class="desc">AI의 페르소나와 채점 기준을 직접 코딩하세요.</p>
+                <textarea id="system-prompt" spellcheck="false">
+You are a strict TORFL-2 (B2) Russian examiner.
+Target Level: B2 (Upper Intermediate).
+
+[Role]
+- Act as a formal university professor.
+- Do not be friendly. Be objective.
+
+[Task]
+- Correct every grammar mistake.
+- If user uses simple vocabulary, suggest B2-level synonyms.
+- Output JSON format: { "correction": "...", "reply": "..." }
+                </textarea>
+                <button id="save-prompt-btn" class="primary-btn">💾 Save Configuration</button>
+            </section>
+
+            <!-- 4. 설정 -->
+            <section id="settings" class="panel">
+                <h2>⚙️ Engine Settings</h2>
+                <div class="setting-group">
+                    <label>OpenAI API Key</label>
+                    <input type="password" id="api-key-input" placeholder="sk-...">
+                </div>
+                <div class="setting-group">
+                    <label>Model Selection</label>
+                    <select id="model-select">
+                        <option value="gpt-4o">GPT-4o (Smartest)</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fast)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>TTS Voice</label>
+                    <select id="voice-select">
+                        <option value="onyx">Onyx (Deep Male)</option>
+                        <option value="shimmer">Shimmer (Clear Female)</option>
+                        <option value="alloy">Alloy (Neutral)</option>
+                    </select>
+                </div>
+                <button id="save-settings-btn" class="primary-btn">Apply Changes</button>
+            </section>
+
         </main>
     </div>
-
-    <!-- 핵심: type="module"을 써야 파일을 쪼갤 수 있음 -->
     <script type="module" src="scripts/main.js"></script>
 </body>
 </html>

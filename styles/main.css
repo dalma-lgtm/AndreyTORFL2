@@ -1,116 +1,148 @@
+/* Dark Mode & Professional Look */
 :root {
-    --primary: #4c6ef5;       /* 인디고 블루 */
-    --primary-hover: #364fc7;
-    --bg-color: #f8f9fa;      /* 아주 연한 회색 배경 */
-    --card-bg: #ffffff;
-    --text-main: #212529;
-    --text-sub: #868e96;
-    --border: #e9ecef;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    --radius: 16px;
+    --bg-dark: #1e1e1e;
+    --bg-panel: #252526;
+    --sidebar: #333333;
+    --accent: #007acc; /* VS Code Blue */
+    --text-main: #d4d4d4;
+    --text-dim: #858585;
+    --border: #454545;
+    --success: #4ec9b0;
+    --danger: #f48771;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--bg-color);
+    background-color: var(--bg-dark);
     color: var(--text-main);
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* 개발자 폰트 */
     margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
-#app {
-    width: 100%;
-    max-width: 480px; /* 모바일 최적화 폭 */
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
+.app-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    height: 90vh; /* 화면 꽉 채우기 */
+    padding: 15px;
 }
 
-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border);
-    text-align: center;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-}
-
-header h1 {
-    margin: 0;
+.brand {
     font-size: 1.2rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--text-main);
+    font-weight: bold;
+    color: var(--success);
+    margin-bottom: 30px;
+    letter-spacing: 1px;
 }
 
-.tabs {
-    display: flex;
-    padding: 5px;
-    background: #f1f3f5;
-    margin: 15px;
-    border-radius: 12px;
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 10px;
+.nav-btn {
+    background: none;
     border: none;
-    background: transparent;
-    color: var(--text-sub);
-    font-weight: 600;
-    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px;
+    font-size: 0.95rem;
     cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-.tab-btn.active {
-    background: white;
-    color: var(--primary);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.tab-content {
-    display: none;
-    flex: 1;
-    overflow: hidden;
-    padding: 0 15px 15px 15px;
-}
-
-.tab-content.active {
-    display: flex;
-    flex-direction: column;
-}
-
-/* 버튼 공통 스타일 */
-.action-btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    background: var(--primary);
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    font-family: inherit;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+}
+
+.nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+.nav-btn.active { background: var(--accent); color: white; }
+
+.status-indicator {
+    margin-top: auto;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
     gap: 8px;
+    color: var(--success);
+}
+.dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+
+/* Content Area */
+.content { flex: 1; padding: 20px; background: var(--bg-panel); overflow-y: auto; }
+
+.panel { display: none; height: 100%; flex-direction: column; }
+.panel.active { display: flex; }
+
+h2 { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; color: white; }
+
+/* Dashboard Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.stat-card { background: #3c3c3c; padding: 20px; border-radius: 5px; border: 1px solid var(--border); }
+.stat-card h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-dim); }
+.stat-card p { margin: 0; font-size: 1.5rem; font-weight: bold; color: white; }
+
+/* Prompt Editor */
+textarea#system-prompt {
+    flex: 1;
+    background: #1e1e1e;
+    color: #ce9178; /* 코드 하이라이팅 색상 */
+    border: 1px solid var(--border);
+    padding: 15px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
 }
 
-.action-btn:active {
-    transform: scale(0.98);
+/* Chat Terminal Style */
+.terminal-chat {
+    flex: 1;
+    background: #1e1e1e;
+    border: 1px solid var(--border);
+    padding: 15px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    font-family: inherit;
 }
 
-.action-btn.secondary {
-    background: #e9ecef;
-    color: var(--text-main);
+.msg { margin-bottom: 10px; line-height: 1.5; }
+.msg.user { color: #569cd6; } /* Blue */
+.msg.ai { color: #dcdcaa; }   /* Yellow */
+.msg.system { color: #6a9955; } /* Green */
+.msg .correction { color: #f48771; display: block; font-size: 0.85rem; margin-bottom: 5px; }
+
+/* Controls */
+.input-console { display: flex; gap: 10px; height: 50px; }
+.input-console input {
+    flex: 1;
+    background: #3c3c3c;
+    border: 1px solid var(--border);
+    color: white;
+    padding: 0 15px;
+    font-family: inherit;
+}
+.console-btn {
+    background: #3c3c3c;
+    border: 1px solid var(--border);
+    color: white;
+    width: 50px;
+    cursor: pointer;
+}
+.console-btn.rec { width: 80px; color: var(--danger); }
+.console-btn:hover { background: #505050; }
+
+.primary-btn {
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
 }
