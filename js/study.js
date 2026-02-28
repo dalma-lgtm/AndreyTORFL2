@@ -1,59 +1,86 @@
 // js/study.js
 
-let vocabList = [
-    { ru: "пренебрегать", ko: "무시하다, 경시하다", example: "Он пренебрегает советами." },
-    { ru: "возражать", ko: "반대하다", example: "Я не возражаю." },
-    { ru: "способствовать", ko: "촉진하다, 기여하다", example: "Это способствует развитию." }
+// [중요] 데이터는 이렇게 변수(const)에 담아야 에러가 안 납니다!
+const vocabList = [
+    {
+        ru: "пренебрегать",
+        ko: "무시하다, 경시하다",
+        example: "Он пренебрегает здоровьем."
+    },
+    {
+        ru: "возражать",
+        ko: "반대하다",
+        example: "Я не возражаю."
+    }
 ];
 
 let currentIndex = 0;
 let isFlipped = false;
 
-const cardFront = document.querySelector('.card-front h3'); // 선택자 수정 필요할 수 있음 (HTML 구조 확인)
-const cardStack = document.getElementById('card-stack');
-
 document.addEventListener('DOMContentLoaded', () => {
+    const cardStack = document.getElementById('card-stack');
+    
+    // 에러 방지: 카드를 넣을 곳이 없으면 중단
+    if (!cardStack) return;
+
+    // 초기 카드 그리기
     renderCard();
 
-    // 버튼 이벤트
-    document.getElementById('btn-next').addEventListener('click', () => {
+    // 버튼 기능 연결
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnFlip = document.getElementById('btn-flip');
+
+    if (btnNext) btnNext.onclick = () => {
         currentIndex = (currentIndex + 1) % vocabList.length;
         isFlipped = false;
         renderCard();
-    });
+    };
 
-    document.getElementById('btn-prev').addEventListener('click', () => {
+    if (btnPrev) btnPrev.onclick = () => {
         currentIndex = (currentIndex - 1 + vocabList.length) % vocabList.length;
         isFlipped = false;
         renderCard();
-    });
+    };
 
-    document.getElementById('btn-flip').addEventListener('click', () => {
+    if (btnFlip) btnFlip.onclick = () => {
         isFlipped = !isFlipped;
         renderCard();
-    });
-    
-    // GitHub 연동 버튼 (나중에 활성화)
-    document.getElementById('btn-refresh-vocab').addEventListener('click', () => {
-        alert("GitHub에서 최신 단어장을 가져옵니다... (기능 구현 예정)");
-    });
+    };
 });
 
 function renderCard() {
+    const cardStack = document.getElementById('card-stack');
+    if (!cardStack || vocabList.length === 0) return;
+
     const word = vocabList[currentIndex];
-    const cardHtml = `
-        <div class="flashcard" style="transform: ${isFlipped ? 'rotateY(180deg)' : 'rotateY(0)'}; transition: transform 0.6s;">
-            <div style="position: absolute; backface-visibility: hidden;">
-                <h3 style="font-size: 2rem; margin-bottom: 10px;">${word.ru}</h3>
-                <p style="color: #888;">클릭하여 뜻 확인</p>
-            </div>
-            <div style="position: absolute; backface-visibility: hidden; transform: rotateY(180deg);">
-                <h3 style="font-size: 1.5rem; color: #3b82f6;">${word.ko}</h3>
-                <p style="margin-top: 15px; font-style: italic;">"${word.example}"</p>
-            </div>
+    
+    // 카드 HTML 생성
+    cardStack.innerHTML = `
+        <div class="flashcard" style="
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: #18181b; border: 1px solid #333; border-radius: 20px;
+            text-align: center; padding: 20px;
+        ">
+            <!-- 상태에 따라 내용 바꾸기 -->
+            ${!isFlipped ? 
+                `<h2 style="font-size: 2.5rem; margin:0;">${word.ru}</h2>
+                 <p style="color:#666; margin-top:20px;">(클릭해서 뜻 확인)</p>` 
+                : 
+                `<h2 style="font-size: 2rem; color:#3b82f6; margin:0;">${word.ko}</h2>
+                 <p style="color:#aaa; margin-top:15px; font-style:italic;">"${word.example}"</p>`
+            }
         </div>
     `;
     
-    // 기존 내용을 싹 지우고 새로 그림 (간단 구현)
-    cardStack.innerHTML = cardHtml;
+    // 카드 클릭하면 뒤집기 효과
+    const card = cardStack.querySelector('.flashcard');
+    if(card) {
+        card.onclick = () => {
+            isFlipped = !isFlipped;
+            renderCard();
+        };
+    }
 }
