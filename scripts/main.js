@@ -4,18 +4,22 @@ import { transcribeAudio, getAIResponse, generateSpeech } from './api.js';
 // 1. State Management (설정값 로드)
 // ==========================================
 const state = {
-    apiKey: localStorage.getItem('openai_key') || '',
-    model: localStorage.getItem('selected_model') || 'gpt-4o',
-    voice: localStorage.getItem('selected_voice') || 'onyx',
+    provider: localStorage.getItem('provider') || 'openai', // 'openai' or 'google'
+    openaiKey: localStorage.getItem('openai_key') || '',
+    googleKey: localStorage.getItem('google_key') || '',
+    openaiModel: localStorage.getItem('openai_model') || 'gpt-5.2',
+    googleModel: localStorage.getItem('google_model') || 'gemini-3-flash',
     systemPrompt: localStorage.getItem('system_prompt') || document.getElementById('system-prompt').value
 };
 
 // 초기값 UI 반영
-document.getElementById('api-key-input').value = state.apiKey;
-document.getElementById('model-select').value = state.model;
-document.getElementById('voice-select').value = state.voice;
-document.getElementById('system-prompt').value = state.systemPrompt;
-document.getElementById('current-model-display').innerText = state.model;
+document.getElementById('active-provider').value = state.provider;
+document.getElementById('openai-key-input').value = state.openaiKey;
+document.getElementById('google-key-input').value = state.googleKey;
+document.getElementById('openai-model-select').value = state.openaiModel;
+document.getElementById('google-model-select').value = state.googleModel;
+
+updateDashboard();
 
 // ==========================================
 // 2. Navigation (사이드바 탭 전환)
@@ -34,32 +38,37 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 // 3. Settings & Prompt Save
 // ==========================================
 document.getElementById('save-settings-btn').addEventListener('click', () => {
-    state.apiKey = document.getElementById('api-key-input').value;
-    state.model = document.getElementById('model-select').value;
-    state.voice = document.getElementById('voice-select').value;
+    state.provider = document.getElementById('active-provider').value;
+    state.openaiKey = document.getElementById('openai-key-input').value;
+    state.googleKey = document.getElementById('google-key-input').value;
+    state.openaiModel = document.getElementById('openai-model-select').value;
+    state.googleModel = document.getElementById('google-model-select').value;
     
-    localStorage.setItem('openai_key', state.apiKey);
-    localStorage.setItem('selected_model', state.model);
-    localStorage.setItem('selected_voice', state.voice);
+    localStorage.setItem('provider', state.provider);
+    localStorage.setItem('openai_key', state.openaiKey);
+    localStorage.setItem('google_key', state.googleKey);
+    localStorage.setItem('openai_model', state.openaiModel);
+    localStorage.setItem('google_model', state.googleModel);
     
     alert("✅ Settings Saved!");
-    document.getElementById('current-model-display').innerText = state.model;
+    updateDashboard();
 });
 
-document.getElementById('save-prompt-btn').addEventListener('click', () => {
-    state.systemPrompt = document.getElementById('system-prompt').value;
-    localStorage.setItem('system_prompt', state.systemPrompt);
-    alert("🧠 Brain Updated!");
-});
+function updateDashboard() {
+    const modelDisplay = state.provider === 'openai' ? state.openaiModel : state.googleModel;
+    document.getElementById('current-model-display').innerText = `${state.provider.toUpperCase()} / ${modelDisplay}`;
+}
 
 // ==========================================
 // 4. Chat Engine
 // ==========================================
 async function handleInput(text) {
-    if(!state.apiKey) return alert("Please set API Key in Settings first.");
+    // 키 확인
+    const activeKey = state.provider === 'openai' ? state.openaiKey : state.googleKey;
+    if(!activeKey) return alert(`Please set ${state.provider.toUpperCase()} API Key first.`);
     
     addLog(`[USER] ${text}`, 'user');
-    addLog(`[SYSTEM] Processing with ${state.model}...`, 'system');
+    addLog(`[SYSTEM] Thinking with ${state.provider}...`, 'system');
 
     try {
         const messages = [
@@ -67,38 +76,31 @@ async function handleInput(text) {
             { role: "user", content: text }
         ];
 
-        // 1. GPT Call
-        const gptData = await getAIResponse(messages, state.apiKey, state.model);
-        const aiResponse = JSON.parse(gptData.choices[0].message.content);
+        let responseData;
+        
+        // 공급자에 따라 다른 함수 호출
+        if (state.provider === 'openai') {
+            responseData = await getOpenAIResponse(messages, state.openaiKey, state.openaiModel);
+        } else {
+            responseData = await getGeminiResponse(messages, state.googleKey, state.googleModel);
+        }
 
-        // 2. Display
+        const aiResponse = JSON.parse(responseData.choices[0].message.content);
+
         addLog(`[AI] ${aiResponse.reply}`, 'ai', aiResponse.correction);
 
-        // 3. TTS (Auto-play option check)
-        if(document.getElementById('auto-tts').checked) {
-            const audioBlob = await generateSpeech(aiResponse.reply, state.apiKey, state.voice);
+        // TTS는 OpenAI API를 빌려 씀 (Gemini TTS보다 접근성이 좋아서)
+        // 주의: Google 모드여도 TTS를 쓰려면 OpenAI 키가 필요함! (없으면 스킵)
+        if(document.getElementById('auto-tts').checked && state.openaiKey) {
+            const audioBlob = await generateSpeech(aiResponse.reply, state.openaiKey, "onyx");
             new Audio(URL.createObjectURL(audioBlob)).play();
         }
 
     } catch (e) {
+        console.error(e);
         addLog(`[ERROR] ${e.message}`, 'system');
     }
-}
-
-function addLog(text, type, correction = null) {
-    const box = document.getElementById('chat-box');
-    const div = document.createElement('div');
-    div.className = `msg ${type}`;
-    
-    if(correction && correction !== "null") {
-        div.innerHTML = `<span class="correction">⚠️ CORRECTION: ${correction}</span>${text}`;
-    } else {
-        div.innerText = text;
-    }
-    
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
+}   
 
 // ==========================================
 // 5. Event Listeners (Input)
