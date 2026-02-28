@@ -94,15 +94,17 @@ const Settings = {
 
         const currentLLM = Storage.getSelectedLLM();
 
-        // 사용 가능한 모델 목록 (키가 있는 것만)
+        // 2026년 3월 최신 모델 목록 (키가 있는 것만)
         const models = [];
         if (Storage.hasApiKey('openai')) {
-            models.push({ value: 'gpt-4o', label: 'GPT-4o' });
-            models.push({ value: 'gpt-4o-mini', label: 'GPT-4o-mini' });
+            models.push({ value: 'gpt-5-mini', label: 'GPT-5 Mini ⚡' });
+            models.push({ value: 'gpt-5', label: 'GPT-5' });
+            models.push({ value: 'gpt-5.2', label: 'GPT-5.2 Thinking 🏆' });
         }
         if (Storage.hasApiKey('google')) {
-            models.push({ value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' });
-            models.push({ value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash' });
+            models.push({ value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash ⚡' });
+            models.push({ value: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro 🧠' });
+            models.push({ value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' });
         }
 
         select.innerHTML = '';

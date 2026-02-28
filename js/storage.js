@@ -73,7 +73,7 @@ const Storage = {
 
     // ===== 모델 설정 =====
     getSelectedLLM() {
-        return this.get(this.KEYS.SETTING_LLM, 'gpt-4o-mini');
+        return this.get(this.KEYS.SETTING_LLM, 'gpt-5-mini');
     },
 
     setSelectedLLM(model) {
@@ -99,8 +99,9 @@ const Storage = {
     // LLM 모델이 어느 프로바이더에 속하는지
     getProviderForLLM(model) {
         if (!model) model = this.getSelectedLLM();
-        if (model.startsWith('gpt')) return 'openai';
         if (model.startsWith('gemini')) return 'google';
+        // gpt-5, gpt-5.2, gpt-4o, o3, o4 등 OpenAI 모델 전부 커버
+        if (model.startsWith('gpt') || model.startsWith('o')) return 'openai';
         return 'openai';
     },
 
