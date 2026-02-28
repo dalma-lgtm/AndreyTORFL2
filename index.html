@@ -22,21 +22,33 @@
             </nav>
 
             <!-- 채팅 화면 -->
-            <section id="chat-tab" class="tab-content active">
+            <!-- index.html의 <section id="chat-tab"> 부분 교체 -->
+
+<section id="chat-tab" class="tab-content active">
     <div id="chat-box" class="chat-container">
-        <div class="message ai">Привет! Готовы к экзамену ТРКИ-2? (토르플 2급 준비되셨나요?)</div>
+        <!-- 초기 환영 메시지 -->
+        <div class="message ai">
+            👋 Здравствуйте!<br>
+            <b>TORFL-2 Speaking Coach</b>입니다.<br>
+            오늘의 주제를 말씀해 주세요.
+        </div>
     </div>
     
-    <!-- ✨ 추가된 부분: 텍스트 입력창 -->
-    <div class="input-area" style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <input type="text" id="text-input" placeholder="러시아어로 입력하세요..." style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
-        <button id="send-btn" style="padding: 10px 20px; background: #228be6; color: white; border: none; border-radius: 5px; cursor: pointer;">전송</button>
-    </div>
+    <!-- 하단 입력 컨트롤 -->
+    <div style="margin-top: auto;">
+        <!-- 텍스트 입력 -->
+        <div class="input-area">
+            <input type="text" id="text-input" placeholder="메시지를 입력하세요 (Russian)...">
+            <button id="send-btn" class="send-btn">➤</button>
+        </div>
 
-    <div class="controls">
-        <button id="rec-btn" class="action-btn">🎤 말하기 (Hold)</button>
+        <!-- 음성 버튼 -->
+        <button id="rec-btn" class="action-btn" style="margin-top: 10px;">
+            🎙️ 말하기 (Hold)
+        </button>
     </div>
 </section>
+
 
             <!-- 단어장 화면 -->
             <section id="vocab-tab" class="tab-content">
