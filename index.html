@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TORFL Tutor - Andrey's Knowledge Base</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/chat.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>🎓 TORFL-2 Master</h1>
+            <div id="status-bar">Ready</div>
+        </header>
+        
+        <main>
+            <!-- 탭 메뉴 -->
+            <nav class="tabs">
+                <button class="tab-btn active" data-tab="chat">🗣️ Speaking</button>
+                <button class="tab-btn" data-tab="vocab">📚 Vocabulary (KB)</button>
+            </nav>
+
+            <!-- 채팅 화면 -->
+            <section id="chat-tab" class="tab-content active">
+                <div id="chat-box" class="chat-container">
+                    <div class="message ai">안녕하세요! TORFL 2급 준비를 시작해볼까요?</div>
+                </div>
+                <div class="controls">
+                    <button id="rec-btn" class="action-btn">🎤 말하기 (Hold)</button>
+                </div>
+            </section>
+
+            <!-- 단어장 화면 -->
+            <section id="vocab-tab" class="tab-content">
+                <div class="card">
+                    <h3>Knowledge Base Sync</h3>
+                    <button id="sync-btn" class="action-btn secondary">🔄 GitHub 데이터 불러오기</button>
+                    <div id="vocab-display">데이터를 불러와주세요.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 핵심: type="module"을 써야 파일을 쪼갤 수 있음 -->
+    <script type="module" src="scripts/main.js"></script>
+</body>
+</html>
