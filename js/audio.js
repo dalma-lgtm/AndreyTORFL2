@@ -1,94 +1,116 @@
-// js/audio.js
+/**
+ * audio.js — 마이크 녹음 + 오디오 재생
+ * MediaRecorder API 사용
+ */
 
-let mediaRecorder;
-let audioChunks = [];
-let isRecording = false;
+const Audio_ = {
+    mediaRecorder: null,
+    audioChunks: [],
+    isRecording: false,
+    currentAudio: null,
 
-const micBtn = document.getElementById('btn-mic');
-const orb = document.getElementById('ai-orb');
-const orbText = document.getElementById('orb-status-text');
+    // ===== 마이크 녹음 시작 =====
+    async startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 16000,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                }
+            });
 
-// 마이크 버튼 클릭 이벤트
-micBtn.addEventListener('click', () => {
-    if (!isRecording) {
-        startRecording();
-    } else {
-        stopRecording();
-    }
-});
+            this.audioChunks = [];
 
-async function startRecording() {
-    const apiKey = localStorage.getItem('torfl_apikey');
-    if (!apiKey) {
-        alert('설정 탭에서 API 키를 먼저 입력해주세요!');
-        return;
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = async () => {
-            // 녹음 끝 -> 처리 중 표시
-            setOrbState('processing', 'Thinking...');
-            
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            
-            // API 호출 (api.js의 함수 사용)
-            if (window.api) {
-                await window.api.processVoiceInteraction(audioBlob);
-            } else {
-                console.error("api.js가 로드되지 않았습니다.");
-                setOrbState('idle', 'Error');
+            // webm 선호, 안 되면 mp4, 마지막으로 기본값
+            let mimeType = 'audio/webm;codecs=opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/mp4';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = '';
+                }
             }
-        };
 
-        mediaRecorder.start();
-        isRecording = true;
-        setOrbState('listening', 'Listening...');
-        
-    } catch (err) {
-        console.error('마이크 권한 오류:', err);
-        alert('마이크 사용 권한이 필요합니다.');
-    }
-}
+            const options = mimeType ? { mimeType } : {};
+            this.mediaRecorder = new MediaRecorder(stream, options);
 
-function stopRecording() {
-    if (mediaRecorder && isRecording) {
-        mediaRecorder.stop();
-        isRecording = false;
-    }
-}
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    this.audioChunks.push(e.data);
+                }
+            };
 
-// Orb 상태 변경 헬퍼 함수
-function setOrbState(state, text) {
-    // 클래스 초기화
-    orb.classList.remove('listening', 'talking', 'processing');
-    micBtn.classList.remove('active');
+            this.mediaRecorder.start(100); // 100ms 간격으로 데이터 수집
+            this.isRecording = true;
+            return true;
+        } catch (e) {
+            console.error('마이크 접근 실패:', e);
+            throw new Error('마이크 접근이 거부되었습니다. 브라우저 설정에서 마이크를 허용해주세요.');
+        }
+    },
 
-    if (state === 'listening') {
-        orb.classList.add('listening');
-        micBtn.classList.add('active'); // 마이크 버튼도 활성화 표시
-    } else if (state === 'talking') {
-        orb.classList.add('talking');
-    }
+    // ===== 녹음 중지 + Blob 반환 =====
+    stopRecording() {
+        return new Promise((resolve) => {
+            if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+                resolve(null);
+                return;
+            }
 
-    if (text) orbText.innerText = text;
-}
+            this.mediaRecorder.onstop = () => {
+                const blob = new Blob(this.audioChunks, {
+                    type: this.mediaRecorder.mimeType || 'audio/webm'
+                });
+                // 스트림 정리
+                this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+                this.isRecording = false;
+                resolve(blob);
+            };
 
-// 전역에서 접근 가능하게 노출
-window.audioController = {
-    setOrbState,
-    playAudio: (blob) => {
-        const audioUrl = URL.createObjectURL(blob);
-        const audio = new Audio(audioUrl);
-        setOrbState('talking', 'Speaking...');
-        audio.play();
-        audio.onended = () => setOrbState('idle', 'Ready');
-    }
+            this.mediaRecorder.stop();
+        });
+    },
+
+    // ===== TTS 오디오 재생 =====
+    async playBlob(blob) {
+        // 이전 재생 중지
+        this.stopPlaying();
+
+        const url = URL.createObjectURL(blob);
+        this.currentAudio = new window.Audio(url);
+
+        return new Promise((resolve, reject) => {
+            this.currentAudio.onended = () => {
+                URL.revokeObjectURL(url);
+                this.currentAudio = null;
+                resolve();
+            };
+            this.currentAudio.onerror = (e) => {
+                URL.revokeObjectURL(url);
+                this.currentAudio = null;
+                reject(new Error('오디오 재생 실패'));
+            };
+            this.currentAudio.play().catch(reject);
+        });
+    },
+
+    // ===== 재생 중지 =====
+    stopPlaying() {
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio = null;
+        }
+    },
+
+    // ===== TTS로 텍스트 읽기 (API 호출 + 재생) =====
+    async speakText(text) {
+        try {
+            const blob = await API.speak(text);
+            await this.playBlob(blob);
+        } catch (e) {
+            console.error('TTS 오류:', e);
+            throw e;
+        }
+    },
 };

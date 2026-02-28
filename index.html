@@ -2,140 +2,319 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TORFL 2 AI Tutor</title>
-    <!-- 2026년형 폰트 (러시아어 지원) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    
-    <!-- 스타일 연결 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ТРКИ-2 Study App</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/orb.css">
-    
-    <!-- 아이콘 -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- ===== 하단 네비게이션 ===== -->
+    <nav id="bottom-nav">
+        <button class="nav-btn active" data-page="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">홈</span>
+        </button>
+        <button class="nav-btn" data-page="conversation">
+            <span class="nav-icon">🗣️</span>
+            <span class="nav-label">회화</span>
+        </button>
+        <button class="nav-btn" data-page="vocabulary">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">단어</span>
+        </button>
+        <button class="nav-btn" data-page="quiz">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">시험</span>
+        </button>
+        <button class="nav-btn" data-page="settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">설정</span>
+        </button>
+    </nav>
 
-    <!-- 배경 효과 -->
-    <div class="bg-gradient"></div>
+    <!-- ===== 페이지 컨테이너 ===== -->
+    <main id="app-container">
 
-    <!-- 메인 컨텐츠 영역 -->
-    <main class="app-container">
-        
-        <!-- [TAB 1] 라이브 대화 (Chat) -->
-        <section id="tab-chat" class="tab-content active">
-            <div class="chat-header">
-                <span class="status-badge online">● Live</span>
-                <h2 id="current-model-display">GPT-4o</h2>
-            </div>
-            
-            <!-- AI Orb (화면 중앙) -->
-            <div class="orb-wrapper">
-                <div class="orb" id="ai-orb"></div>
-                <div class="orb-status" id="orb-status-text">Listening...</div>
-            </div>
-
-            <!-- 대화 로그 (스크롤) -->
-            <div class="chat-log" id="chat-log">
-                <div class="msg ai">
-                    Привет! 토르플 2급 준비를 시작해볼까요?
-                </div>
-            </div>
-
-            <!-- 하단 컨트롤 -->
-            <div class="controls">
-                <button id="btn-mic" class="control-btn mic-btn">
-                    <i data-lucide="mic"></i>
-                </button>
-                <div class="text-input-box">
-                    <input type="text" id="chat-input" placeholder="메시지 입력...">
-                    <button id="btn-send"><i data-lucide="send"></i></button>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- [TAB 2] 단어 공부 (Study) -->
-        <section id="tab-study" class="tab-content">
-            <header class="study-header">
-                <h2>Vocabulary</h2>
-                <button id="btn-refresh-vocab"><i data-lucide="refresh-cw"></i></button>
+        <!-- 📊 대시보드 페이지 -->
+        <section id="page-dashboard" class="page active">
+            <header class="page-header">
+                <h1>ТРКИ-2 Study</h1>
+                <p class="subtitle">토르플 2급 학습 앱</p>
             </header>
-            
-            <!-- 퀴즈 카드 영역 -->
-            <div class="card-stack" id="card-stack">
-                <!-- 자바스크립트로 카드가 여기에 생성됨 -->
-                <div class="flashcard">
-                    <div class="card-front">
-                        <h3>불러오는 중...</h3>
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="streak-count">0</div>
+                        <div class="stat-label">연속 학습일</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-value" id="today-minutes">0분</div>
+                        <div class="stat-label">오늘 학습</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-value" id="conv-count">0</div>
+                        <div class="stat-label">회화 횟수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="words-mastered">0</div>
+                        <div class="stat-label">마스터 단어</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h2>빠른 시작</h2>
+                    <button class="action-btn" onclick="App.navigate('conversation')">
+                        <span class="action-icon">🗣️</span>
+                        <div class="action-text">
+                            <strong>회화 연습 시작</strong>
+                            <small>AI 튜터와 러시아어 대화</small>
+                        </div>
+                        <span class="action-arrow">→</span>
+                    </button>
+                    <button class="action-btn" onclick="App.navigate('vocabulary')">
+                        <span class="action-icon">📚</span>
+                        <div class="action-text">
+                            <strong>단어 테스트</strong>
+                            <small>토르플 2급 필수 어휘</small>
+                        </div>
+                        <span class="action-arrow">→</span>
+                    </button>
+                    <button class="action-btn" onclick="App.navigate('quiz')">
+                        <span class="action-icon">📝</span>
+                        <div class="action-text">
+                            <strong>모의시험</strong>
+                            <small>문법 · 읽기 · 듣기</small>
+                        </div>
+                        <span class="action-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- API 키 미설정 경고 -->
+                <div id="setup-warning" class="warning-card" style="display:none;">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>API 키를 설정해주세요</strong>
+                        <p>회화, 단어 발음, 시험 기능을 사용하려면 API 키가 필요합니다.</p>
+                        <button class="btn-small" onclick="App.navigate('settings')">설정으로 이동 →</button>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="study-controls">
-                <button class="action-btn secondary" id="btn-prev">이전</button>
-                <button class="action-btn primary" id="btn-flip">정답 확인</button>
-                <button class="action-btn secondary" id="btn-next">다음</button>
+        <!-- 🗣️ 회화 페이지 -->
+        <section id="page-conversation" class="page">
+            <header class="page-header">
+                <h1>🗣️ 회화 연습</h1>
+                <div class="conv-controls">
+                    <select id="scenario-select" class="select-input">
+                        <option value="free">자유 대화</option>
+                        <option value="daily-cafe">☕ 카페에서 주문</option>
+                        <option value="daily-market">🛒 시장에서 쇼핑</option>
+                        <option value="opinion-culture">🎭 문화에 대한 의견</option>
+                        <option value="travel-hotel">🏨 호텔 체크인</option>
+                    </select>
+                    <select id="llm-select-conv" class="select-input">
+                        <!-- settings.js에서 동적 생성 -->
+                    </select>
+                </div>
+            </header>
+
+            <div id="chat-messages" class="chat-container">
+                <div class="chat-placeholder">
+                    <p>🎤 아래 버튼을 눌러 러시아어로 말해보세요</p>
+                    <p class="hint">시나리오를 선택하거나 자유롭게 대화하세요</p>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div id="recording-status" class="recording-status" style="display:none;">
+                    <span class="recording-dot"></span>
+                    <span>녹음 중...</span>
+                </div>
+                <div class="chat-buttons">
+                    <button id="btn-record" class="btn-record" title="누르고 말하기">
+                        <span class="mic-icon">🎤</span>
+                    </button>
+                    <button id="btn-end-conv" class="btn-secondary" title="대화 종료 & 피드백">
+                        📋 피드백
+                    </button>
+                </div>
             </div>
         </section>
 
+        <!-- 📚 단어장 페이지 -->
+        <section id="page-vocabulary" class="page">
+            <header class="page-header">
+                <h1>📚 단어 테스트</h1>
+                <div class="vocab-controls">
+                    <select id="vocab-unit-select" class="select-input">
+                        <option value="unit01">Unit 1: 일상생활</option>
+                    </select>
+                    <select id="vocab-mode-select" class="select-input">
+                        <option value="multiple-choice">객관식</option>
+                        <option value="fill-blank">빈칸 채우기</option>
+                        <option value="listening">듣고 쓰기</option>
+                        <option value="matching">뜻 매칭</option>
+                    </select>
+                </div>
+            </header>
 
-        <!-- [TAB 3] 설정 (Settings) -->
-        <section id="tab-settings" class="tab-content">
-            <h2>Settings</h2>
-            
-            <div class="settings-group">
-                <label>AI Model</label>
-                <select id="setting-model">
-                    <option value="gpt-4o">GPT-4o (OpenAI)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            <div id="vocab-content" class="vocab-container">
+                <div class="vocab-placeholder">
+                    <p>📚 단어 유닛을 선택하고 테스트를 시작하세요</p>
+                    <button class="btn-primary" id="btn-start-vocab">테스트 시작</button>
+                </div>
+            </div>
+
+            <div id="vocab-progress" class="progress-bar-container" style="display:none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="vocab-progress-fill"></div>
+                </div>
+                <span id="vocab-progress-text">0 / 0</span>
+            </div>
+        </section>
+
+        <!-- 📝 모의시험 페이지 -->
+        <section id="page-quiz" class="page">
+            <header class="page-header">
+                <h1>📝 모의시험</h1>
+                <select id="quiz-type-select" class="select-input">
+                    <option value="grammar">문법</option>
+                    <option value="reading">읽기</option>
                 </select>
-            </div>
+            </header>
 
-            <div class="settings-group">
-                <label>OpenAI API Key</label>
-                <input type="password" id="setting-apikey-openai" placeholder="sk-...">
+            <div id="quiz-content" class="quiz-container">
+                <div class="quiz-placeholder">
+                    <p>📝 시험 유형을 선택하고 시작하세요</p>
+                    <button class="btn-primary" id="btn-start-quiz">시험 시작</button>
+                </div>
             </div>
+        </section>
 
-            <div class="settings-group">
-                <label>System Prompt (Persona)</label>
-                <textarea id="setting-prompt" rows="6">당신은 러시아어 토르플 2급(TORFL-2) 전문 시험관입니다.
-1. 사용자의 문법 오류(격변화, 형동사 등)를 엄격하게 지적하세요.
-2. 설명은 한국어로 하되, 예문은 러시아어로 드세요.
-3. 대화는 자연스럽게 이어가세요.</textarea>
+        <!-- ⚙️ 설정 페이지 -->
+        <section id="page-settings" class="page">
+            <header class="page-header">
+                <h1>⚙️ 설정</h1>
+            </header>
+
+            <div class="settings-content">
+                <!-- API 키 섹션 -->
+                <div class="settings-section">
+                    <h2>🔑 API 키</h2>
+                    <p class="settings-desc">키는 이 브라우저의 localStorage에만 저장됩니다. 서버로 전송되지 않습니다.</p>
+                    
+                    <div class="setting-item">
+                        <label for="api-key-openai">OpenAI API Key</label>
+                        <small>STT, TTS, GPT 모델에 사용</small>
+                        <div class="key-input-group">
+                            <input type="password" id="api-key-openai" placeholder="sk-..." class="setting-input">
+                            <button class="btn-toggle-key" onclick="Settings.toggleKeyVisibility('api-key-openai')">👁️</button>
+                        </div>
+                        <div class="key-status" id="status-openai"></div>
+                    </div>
+
+                    <div class="setting-item">
+                        <label for="api-key-google">Google AI API Key</label>
+                        <small>Gemini 모델에 사용</small>
+                        <div class="key-input-group">
+                            <input type="password" id="api-key-google" placeholder="AIza..." class="setting-input">
+                            <button class="btn-toggle-key" onclick="Settings.toggleKeyVisibility('api-key-google')">👁️</button>
+                        </div>
+                        <div class="key-status" id="status-google"></div>
+                    </div>
+
+                    <button class="btn-primary" id="btn-save-keys" onclick="Settings.saveKeys()">
+                        💾 API 키 저장
+                    </button>
+                    <button class="btn-secondary" id="btn-test-keys" onclick="Settings.testKeys()">
+                        🧪 연결 테스트
+                    </button>
+                </div>
+
+                <!-- LLM 선택 섹션 -->
+                <div class="settings-section">
+                    <h2>🧠 AI 모델 선택</h2>
+                    
+                    <div class="setting-item">
+                        <label>회화 튜터 LLM</label>
+                        <select id="setting-llm" class="setting-input">
+                            <option value="gpt-4o">GPT-4o (가장 똑똑, 비쌈)</option>
+                            <option value="gpt-4o-mini" selected>GPT-4o-mini (빠르고 저렴) ⭐</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (빠르고 저렴)</option>
+                            <option value="gemini-2.5-flash-preview">Gemini 2.5 Flash Preview (최신)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>STT (음성→텍스트)</label>
+                        <select id="setting-stt" class="setting-input" disabled>
+                            <option value="gpt-4o-mini-transcribe">gpt-4o-mini-transcribe (고정)</option>
+                        </select>
+                        <small>OpenAI API 키 필요</small>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>TTS (텍스트→음성)</label>
+                        <select id="setting-tts" class="setting-input">
+                            <option value="tts-1" selected>OpenAI tts-1 (빠름)</option>
+                            <option value="tts-1-hd">OpenAI tts-1-hd (고품질)</option>
+                        </select>
+                        <small>OpenAI API 키 필요</small>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>TTS 음성</label>
+                        <select id="setting-tts-voice" class="setting-input">
+                            <option value="alloy">Alloy (중성적)</option>
+                            <option value="echo">Echo (남성적)</option>
+                            <option value="fable">Fable (표현력)</option>
+                            <option value="onyx">Onyx (깊은 남성)</option>
+                            <option value="nova" selected>Nova (여성적) ⭐</option>
+                            <option value="shimmer">Shimmer (밝은 여성)</option>
+                        </select>
+                        <button class="btn-small" onclick="Settings.previewVoice()">🔊 미리듣기</button>
+                    </div>
+
+                    <button class="btn-primary" onclick="Settings.saveModelSettings()">
+                        💾 모델 설정 저장
+                    </button>
+                </div>
+
+                <!-- 데이터 관리 섹션 -->
+                <div class="settings-section">
+                    <h2>💾 데이터 관리</h2>
+                    <div class="setting-item">
+                        <button class="btn-secondary" onclick="Settings.exportData()">📤 학습 데이터 내보내기</button>
+                        <button class="btn-danger" onclick="Settings.resetData()">🗑️ 학습 기록 초기화</button>
+                    </div>
+                </div>
+
+                <!-- 앱 정보 -->
+                <div class="settings-section">
+                    <h2>ℹ️ 앱 정보</h2>
+                    <p class="settings-desc">ТРКИ-2 Study App v0.1</p>
+                    <p class="settings-desc">GitHub: Andreytorfl2</p>
+                </div>
             </div>
-
-            <button id="btn-save-settings" class="full-width-btn">저장하기 (Save)</button>
         </section>
 
     </main>
 
-    <!-- 하단 네비게이션 바 -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-target="tab-chat">
-            <i data-lucide="message-circle"></i>
-            <span>Chat</span>
-        </button>
-        <button class="nav-item" data-target="tab-study">
-            <i data-lucide="book-open"></i>
-            <span>Study</span>
-        </button>
-        <button class="nav-item" data-target="tab-settings">
-            <i data-lucide="settings"></i>
-            <span>Settings</span>
-        </button>
-    </nav>
-
-    <!-- JS 로드 (순서 중요) -->
+    <!-- 스크립트 로드 -->
+    <script src="js/storage.js"></script>
     <script src="js/api.js"></script>
     <script src="js/audio.js"></script>
-    <script src="js/study.js"></script>
-    <script src="js/main.js"></script>
-    <script>
-        lucide.createIcons();
-    </script>
+    <script src="js/settings.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/conversation.js"></script>
+    <script src="js/vocabulary.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
