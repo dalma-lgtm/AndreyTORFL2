@@ -1,74 +1,162 @@
 import { transcribeAudio, getAIResponse, generateSpeech } from './api.js';
+import { fetchVocabulary } from './dataLoader.js';
 
 // ==========================================
-// 1. State Management (설정값 로드)
+// 0. 안전장치: 화면 로드 대기
 // ==========================================
-const state = {
-    provider: localStorage.getItem('provider') || 'openai', // 'openai' or 'google'
-    openaiKey: localStorage.getItem('openai_key') || '',
-    googleKey: localStorage.getItem('google_key') || '',
-    openaiModel: localStorage.getItem('openai_model') || 'gpt-5.2',
-    googleModel: localStorage.getItem('google_model') || 'gemini-3-flash',
-    systemPrompt: localStorage.getItem('system_prompt') || document.getElementById('system-prompt').value
-};
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 App Initialized");
+    initApp();
+});
 
-// 초기값 UI 반영
-document.getElementById('active-provider').value = state.provider;
-document.getElementById('openai-key-input').value = state.openaiKey;
-document.getElementById('google-key-input').value = state.googleKey;
-document.getElementById('openai-model-select').value = state.openaiModel;
-document.getElementById('google-model-select').value = state.googleModel;
+function initApp() {
+    // 1. 설정값 불러오기
+    const state = {
+        apiKey: localStorage.getItem('openai_key') || '',
+        model: localStorage.getItem('selected_model') || 'gpt-4o',
+        voice: localStorage.getItem('selected_voice') || 'onyx',
+        systemPrompt: localStorage.getItem('system_prompt') || document.getElementById('system-prompt').value
+    };
 
-updateDashboard();
+    // UI 초기값 반영
+    if(document.getElementById('api-key-input')) document.getElementById('api-key-input').value = state.apiKey;
+    if(document.getElementById('model-select')) document.getElementById('model-select').value = state.model;
+    if(document.getElementById('voice-select')) document.getElementById('voice-select').value = state.voice;
+    if(document.getElementById('system-prompt')) document.getElementById('system-prompt').value = state.systemPrompt;
+    
+    const modelDisplay = document.getElementById('current-model-display');
+    if(modelDisplay) modelDisplay.innerText = state.model;
 
-// ==========================================
-// 2. Navigation (사이드바 탭 전환)
-// ==========================================
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
+    // ==========================================
+    // 2. 탭 전환 로직 (사이드바)
+    // ==========================================
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const panels = document.querySelectorAll('.panel');
+
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // 모든 버튼/패널 비활성화
+            navBtns.forEach(b => b.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+            
+            // 클릭한 것만 활성화
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-target');
+            const targetPanel = document.getElementById(targetId);
+            
+            if(targetPanel) {
+                targetPanel.classList.add('active');
+                console.log(`Tab switched to: ${targetId}`);
+            } else {
+                console.error(`Panel not found: ${targetId}`);
+            }
+        });
     });
-});
 
-// ==========================================
-// 3. Settings & Prompt Save
-// ==========================================
-document.getElementById('save-settings-btn').addEventListener('click', () => {
-    state.provider = document.getElementById('active-provider').value;
-    state.openaiKey = document.getElementById('openai-key-input').value;
-    state.googleKey = document.getElementById('google-key-input').value;
-    state.openaiModel = document.getElementById('openai-model-select').value;
-    state.googleModel = document.getElementById('google-model-select').value;
-    
-    localStorage.setItem('provider', state.provider);
-    localStorage.setItem('openai_key', state.openaiKey);
-    localStorage.setItem('google_key', state.googleKey);
-    localStorage.setItem('openai_model', state.openaiModel);
-    localStorage.setItem('google_model', state.googleModel);
-    
-    alert("✅ Settings Saved!");
-    updateDashboard();
-});
+    // ==========================================
+    // 3. 채팅 & 녹음 로직
+    // ==========================================
+    const sendBtn = document.getElementById('send-btn');
+    const textInput = document.getElementById('text-input');
+    const recBtn = document.getElementById('rec-btn');
 
-function updateDashboard() {
-    const modelDisplay = state.provider === 'openai' ? state.openaiModel : state.googleModel;
-    document.getElementById('current-model-display').innerText = `${state.provider.toUpperCase()} / ${modelDisplay}`;
+    // 전송 버튼
+    if(sendBtn && textInput) {
+        sendBtn.addEventListener('click', () => {
+            const text = textInput.value;
+            if(text) {
+                handleInput(text, state);
+                textInput.value = "";
+            }
+        });
+
+        textInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendBtn.click();
+        });
+    }
+
+    // 녹음 버튼
+    let mediaRecorder;
+    let audioChunks = [];
+
+    if(recBtn) {
+        if(navigator.mediaDevices) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = [];
+                    
+                    addLog("[SYSTEM] Transcribing...", 'system');
+                    try {
+                        const stt = await transcribeAudio(blob, state.apiKey);
+                        if(stt.text) handleInput(stt.text, state);
+                        else throw new Error("No speech detected");
+                    } catch(e) {
+                        addLog(`[ERROR] STT Failed: ${e.message}`, 'system');
+                    }
+                };
+            }).catch(err => {
+                console.error("Mic Error:", err);
+                addLog("[ERROR] Microphone access denied.", 'system');
+            });
+        }
+
+        recBtn.addEventListener('mousedown', () => {
+            if(!mediaRecorder) return alert("Microphone not ready.");
+            audioChunks = [];
+            mediaRecorder.start();
+            recBtn.classList.add('recording'); // 스타일 클래스 추가
+            recBtn.innerHTML = '<i class="ri-record-circle-line"></i> REC...';
+        });
+
+        recBtn.addEventListener('mouseup', () => {
+            if(mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                recBtn.classList.remove('recording');
+                recBtn.innerHTML = '<i class="ri-mic-line"></i> REC';
+            }
+        });
+    }
+
+    // ==========================================
+    // 4. 설정 저장 로직
+    // ==========================================
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    if(saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', () => {
+            state.apiKey = document.getElementById('api-key-input').value;
+            state.model = document.getElementById('model-select').value;
+            state.voice = document.getElementById('voice-select').value;
+            
+            localStorage.setItem('openai_key', state.apiKey);
+            localStorage.setItem('selected_model', state.model);
+            localStorage.setItem('selected_voice', state.voice);
+            
+            alert("✅ Settings Saved!");
+            if(modelDisplay) modelDisplay.innerText = state.model;
+        });
+    }
+
+    const savePromptBtn = document.getElementById('save-prompt-btn');
+    if(savePromptBtn) {
+        savePromptBtn.addEventListener('click', () => {
+            state.systemPrompt = document.getElementById('system-prompt').value;
+            localStorage.setItem('system_prompt', state.systemPrompt);
+            alert("🧠 Brain Updated!");
+        });
+    }
 }
 
 // ==========================================
-// 4. Chat Engine
+// Helper Functions
 // ==========================================
-async function handleInput(text) {
-    // 키 확인
-    const activeKey = state.provider === 'openai' ? state.openaiKey : state.googleKey;
-    if(!activeKey) return alert(`Please set ${state.provider.toUpperCase()} API Key first.`);
+async function handleInput(text, state) {
+    if(!state.apiKey) return alert("Please set API Key in Settings first.");
     
     addLog(`[USER] ${text}`, 'user');
-    addLog(`[SYSTEM] Thinking with ${state.provider}...`, 'system');
+    addLog(`[SYSTEM] Thinking with ${state.model}...`, 'system');
 
     try {
         const messages = [
@@ -76,23 +164,17 @@ async function handleInput(text) {
             { role: "user", content: text }
         ];
 
-        let responseData;
-        
-        // 공급자에 따라 다른 함수 호출
-        if (state.provider === 'openai') {
-            responseData = await getOpenAIResponse(messages, state.openaiKey, state.openaiModel);
-        } else {
-            responseData = await getGeminiResponse(messages, state.googleKey, state.googleModel);
-        }
+        // 1. GPT Call
+        const gptData = await getAIResponse(messages, state.apiKey, state.model);
+        const aiResponse = JSON.parse(gptData.choices[0].message.content);
 
-        const aiResponse = JSON.parse(responseData.choices[0].message.content);
-
+        // 2. Display
         addLog(`[AI] ${aiResponse.reply}`, 'ai', aiResponse.correction);
 
-        // TTS는 OpenAI API를 빌려 씀 (Gemini TTS보다 접근성이 좋아서)
-        // 주의: Google 모드여도 TTS를 쓰려면 OpenAI 키가 필요함! (없으면 스킵)
-        if(document.getElementById('auto-tts').checked && state.openaiKey) {
-            const audioBlob = await generateSpeech(aiResponse.reply, state.openaiKey, "onyx");
+        // 3. TTS (Auto-play option check)
+        const autoTTS = document.getElementById('auto-tts');
+        if(autoTTS && autoTTS.checked) {
+            const audioBlob = await generateSpeech(aiResponse.reply, state.apiKey, state.voice);
             new Audio(URL.createObjectURL(audioBlob)).play();
         }
 
@@ -100,48 +182,21 @@ async function handleInput(text) {
         console.error(e);
         addLog(`[ERROR] ${e.message}`, 'system');
     }
-}   
-
-// ==========================================
-// 5. Event Listeners (Input)
-// ==========================================
-document.getElementById('send-btn').addEventListener('click', () => {
-    const input = document.getElementById('text-input');
-    if(input.value) {
-        handleInput(input.value);
-        input.value = "";
-    }
-});
-
-// Recorder Logic (간소화)
-const recBtn = document.getElementById('rec-btn');
-let mediaRecorder;
-let audioChunks = [];
-
-if(navigator.mediaDevices) {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-            const blob = new Blob(audioChunks, { type: 'audio/webm' });
-            audioChunks = [];
-            addLog("[SYSTEM] Transcribing audio...", 'system');
-            
-            const stt = await transcribeAudio(blob, state.apiKey);
-            handleInput(stt.text);
-        };
-    });
 }
 
-recBtn.addEventListener('mousedown', () => {
-    audioChunks = [];
-    mediaRecorder?.start();
-    recBtn.classList.add('active');
-    recBtn.innerHTML = '<i class="ri-record-circle-line"></i> REC';
-});
+function addLog(text, type, correction = null) {
+    const box = document.getElementById('chat-box');
+    if(!box) return console.error("Chat box not found!");
 
-recBtn.addEventListener('mouseup', () => {
-    mediaRecorder?.stop();
-    recBtn.classList.remove('active');
-    recBtn.innerHTML = '<i class="ri-mic-line"></i> REC';
-});
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    
+    if(correction && correction !== "null") {
+        div.innerHTML = `<span class="correction" style="color:#ff6b6b; display:block; font-size:0.8em; margin-bottom:5px;">⚠️ CORRECTION: ${correction}</span>${text}`;
+    } else {
+        div.innerText = text;
+    }
+    
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
